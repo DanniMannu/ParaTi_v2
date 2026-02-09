@@ -1,24 +1,24 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import { useState } from "react";
 import {
-    FlatList,
-    Modal,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert, // <-- novo
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import OrderCard from "../../src/components/OrderCard";
 import { mockHistory, mockOrders } from "../../src/data/orders";
 import { Order } from "../../src/types/Order";
 import {
-    acceptOrder,
-    cancelOrder,
-    getMinutesSince,
-    markAsReady,
-    rejectOrder,
-    startPreparing,
+  acceptOrder,
+  cancelOrder,
+  getMinutesSince,
+  markAsReady,
+  rejectOrder,
+  startPreparing,
 } from "../../src/utils/orderActions";
 
 export default function OrdersScreen() {
@@ -33,10 +33,18 @@ export default function OrdersScreen() {
     setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
   }
 
+  // ação simples para o botão de ajuda (placeholder)
+  function onAskHelpPress(order: Order) {
+    Alert.alert(
+      "Pedido de ajuda",
+      `Foi pedido suporte para o Pedido #${order.id}`,
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>
-        Os teus Pedidos
+        Os teus Pedidos{" "}
         <MaterialCommunityIcons name="format-list-checks" size={24} />
       </Text>
       <View style={styles.separator} />
@@ -61,6 +69,7 @@ export default function OrdersScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingVertical: 20 }}
         renderItem={({ item }) => (
+          // mantém o OrderCard simples, sem ajuda aqui
           <OrderCard order={item} onPress={() => setSelectedOrder(item)} />
         )}
       />
@@ -107,12 +116,12 @@ export default function OrdersScreen() {
 
                 {/* AÇÕES DEPENDENDO DO ESTADO */}
                 <View style={{ marginTop: 20 }}>
-                  {/* pending: Accept / Reject */}
+                  {/* pendente: Aceitar / Recusar */}
                   {selectedOrder.status === "pendente" && (
                     <View style={styles.rowButtons}>
                       <ActionButton
                         label="Aceitar"
-                        color="#0EA5E9"
+                        color="rgba(9, 171, 74, 0.95)"
                         onPress={() => {
                           const updated = acceptOrder(selectedOrder);
                           updateOrder(updated);
@@ -121,7 +130,7 @@ export default function OrdersScreen() {
                       />
                       <ActionButton
                         label="Recusar"
-                        color="#EF4444"
+                        color="#d02e2e"
                         onPress={() => {
                           const updated = rejectOrder(selectedOrder);
                           updateOrder(updated);
@@ -131,12 +140,12 @@ export default function OrdersScreen() {
                     </View>
                   )}
 
-                  {/* accepted: Start Preparing + Cancel (só aqui aparece Cancel) */}
+                  {/* aceite: A Preparar / Cancelar / Pedido de ajuda */}
                   {selectedOrder.status === "aceite" && (
                     <>
                       <ActionButton
                         label="A Preparar"
-                        color="#0EA5E9"
+                        color="rgb(22, 231, 85)"
                         onPress={() => {
                           const updated = startPreparing(selectedOrder);
                           updateOrder(updated);
@@ -152,37 +161,46 @@ export default function OrdersScreen() {
                           setSelectedOrder(updated);
                         }}
                       />
+                      {/* <-- novo botão */}
+                      <ActionButton
+                        label="Pedido de ajuda"
+                        color="#2563EB"
+                        onPress={() => onAskHelpPress(selectedOrder)}
+                      />
                     </>
                   )}
 
-                  {/* FAB de Suporte */}
-                  <TouchableOpacity
-                    onPress={() => router.push("./(restaurante)/settings/faq")}
-                    style={styles.fab}
-                    activeOpacity={0.85}
-                    accessibilityLabel="Pedir suporte"
-                  >
-                    <MaterialCommunityIcons
-                      name="lifebuoy"
-                      size={24}
-                      color="#FFF"
-                    />
-                  </TouchableOpacity>
-
-                  {/* preparing: apenas Mark as Ready (sem Cancel aqui) */}
+                  {/* em preparação: Marcar como pronto / Pedido de ajuda */}
                   {selectedOrder.status === "em preparação" && (
+                    <>
+                      <ActionButton
+                        label="Marcar como pronto"
+                        color="#22C55E"
+                        onPress={() => {
+                          const updated = markAsReady(selectedOrder);
+                          updateOrder(updated);
+                          setSelectedOrder(updated);
+                        }}
+                      />
+                      {/* <-- novo botão */}
+                      <ActionButton
+                        label="Pedido de ajuda"
+                        color="#2563EB"
+                        onPress={() => onAskHelpPress(selectedOrder)}
+                      />
+                    </>
+                  )}
+
+                  {/* pronto: apenas tem Pedido de ajuda */}
+                  {selectedOrder.status === "pronto" && (
                     <ActionButton
-                      label="Marcar como pronto"
-                      color="#22C55E"
-                      onPress={() => {
-                        const updated = markAsReady(selectedOrder);
-                        updateOrder(updated);
-                        setSelectedOrder(updated);
-                      }}
+                      label="Pedido de ajuda"
+                      color="#2563EB"
+                      onPress={() => onAskHelpPress(selectedOrder)}
                     />
                   )}
 
-                  {/* ready/rejected/cancelled: nenhuma ação */}
+                  {/* recusado / cancelado: sem ações */}
                 </View>
               </View>
             )}
@@ -238,7 +256,6 @@ function ActionButton({
 }
 
 /** ---- ESTILOS ---- */
-
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
   title: { fontSize: 28, fontWeight: "800" },
@@ -255,7 +272,6 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
 
-  /** ORDER CARD */
   modalBg: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -273,6 +289,7 @@ const styles = StyleSheet.create({
   itemLine: { fontSize: 15, marginTop: 6 },
   modalTotal: { marginTop: 12, fontSize: 18, fontWeight: "700" },
   modalStatus: { marginTop: 6, fontStyle: "italic", color: "#444" },
+
   rowButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -280,7 +297,7 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 50,
     borderRadius: 8,
     marginBottom: 10,
   },
@@ -296,7 +313,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#2563EB",
     alignItems: "center",
     justifyContent: "center",
-    // sombra leve
     shadowColor: "#000",
     shadowOpacity: 0.15,
     shadowRadius: 8,
