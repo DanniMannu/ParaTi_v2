@@ -1,6 +1,10 @@
 // app/(restaurante)/_layout.tsx
 //import { Ionicons } from "@expo/vector-icons";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import {
+  Ionicons,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import { Drawer } from "expo-router/drawer";
 
 export default function RestauranteLayout() {
@@ -33,12 +37,17 @@ export default function RestauranteLayout() {
           ),
         }}
       />
+      {/* 👉 Um único item: “Definições” (pasta é settings/, rótulo é PT) */}
       <Drawer.Screen
-        name="SettingsScreen"
+        name="settings"
         options={{
           title: "Definições",
           drawerIcon: ({ color, size }) => (
-            <Ionicons name="settings-outline" size={size} color={color} />
+            <MaterialCommunityIcons
+              name="cog-outline"
+              size={size}
+              color={color}
+            />
           ),
         }}
       />

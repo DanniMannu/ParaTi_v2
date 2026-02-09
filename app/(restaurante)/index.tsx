@@ -18,7 +18,7 @@ export default function RestauranteHome() {
       <View style={styles.row}>
         <SummaryCard
           label="Total das Vendas"
-          value={`MTN${salesToday.toFixed(2)}`}
+          value={`${salesToday.toFixed(2)} MTN`}
           style={{ marginRight: 12 }}
         />
         <SummaryCard label="Total de Pedidos" value={ordersToday} />
