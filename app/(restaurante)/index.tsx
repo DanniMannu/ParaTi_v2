@@ -31,8 +31,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 28,
-    backgroundColor: "#F7FAFF", // subtil azul muito claro para fundo
+    paddingTop: 20,
+    backgroundColor: "transparent",
   },
   greet: {
     fontSize: 14,

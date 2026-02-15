@@ -2,18 +2,18 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker, {
-    AndroidNativeProps,
-    IOSNativeProps,
+  AndroidNativeProps,
+  IOSNativeProps,
 } from "@react-native-community/datetimepicker";
 import { useEffect, useMemo, useState } from "react";
 import {
-    Alert,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 type ScheduleSettings = {
@@ -337,7 +337,7 @@ function TimeBox({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFF" },
+  container: { flex: 1, backgroundColor: "transparent", padding: 16 },
   actionsBar: { alignItems: "flex-end", marginBottom: 8 },
   actionBtn: {
     backgroundColor: "#E7EEFF",

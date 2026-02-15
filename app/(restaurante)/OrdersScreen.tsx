@@ -121,7 +121,7 @@ export default function OrdersScreen() {
                     <View style={styles.rowButtons}>
                       <ActionButton
                         label="Aceitar"
-                        color="rgba(9, 171, 74, 0.95)"
+                        color="#16A34A"
                         onPress={() => {
                           const updated = acceptOrder(selectedOrder);
                           updateOrder(updated);
@@ -145,7 +145,7 @@ export default function OrdersScreen() {
                     <>
                       <ActionButton
                         label="A Preparar"
-                        color="rgb(22, 231, 85)"
+                        color="rgb(171, 225, 210)"
                         onPress={() => {
                           const updated = startPreparing(selectedOrder);
                           updateOrder(updated);
@@ -257,7 +257,12 @@ function ActionButton({
 
 /** ---- ESTILOS ---- */
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    backgroundColor: "transparent",
+  },
   title: { fontSize: 28, fontWeight: "800" },
   separator: { height: 2, backgroundColor: "#E5E7EB", marginVertical: 8 },
   tabs: { flexDirection: "row", gap: 24 },

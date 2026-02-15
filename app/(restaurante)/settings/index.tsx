@@ -1,32 +1,48 @@
 // app/(restaurante)/settings/index.tsx
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ImageBackground,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function SettingsHome() {
   return (
-    <View style={styles.container}>
-      <MenuItem
-        icon="account-circle-outline"
-        title="Perfil"
-        onPress={() => router.push("/(restaurante)/settings/profile")}
-      />
-      <MenuItem
-        icon="clock-outline"
-        title="Horário"
-        onPress={() => router.push("/(restaurante)/settings/schedule")}
-      />
-      <MenuItem
-        icon="file-document-outline"
-        title="Documentação"
-        onPress={() => router.push("/(restaurante)/settings/documents")}
-      />
-      <MenuItem
-        icon="help-circle-outline"
-        title="Questões frequentes"
-        onPress={() => router.push("/(restaurante)/settings/faq")}
-      />
-    </View>
+    <ImageBackground
+      source={require("../../../assets/images/background.png")}
+      //style={styles.bg}
+      style={StyleSheet.absoluteFill}
+      resizeMode="cover"
+    >
+      {/* Overlay opcional para melhorar contraste (podes remover se não precisares) */}
+      <View style={styles.overlay} />
+
+      <View style={styles.container}>
+        <MenuItem
+          icon="account-circle-outline"
+          title="Perfil"
+          onPress={() => router.push("/(restaurante)/settings/profile")}
+        />
+        <MenuItem
+          icon="clock-outline"
+          title="Horário"
+          onPress={() => router.push("/(restaurante)/settings/schedule")}
+        />
+        <MenuItem
+          icon="file-document-outline"
+          title="Documentação"
+          onPress={() => router.push("/(restaurante)/settings/documents")}
+        />
+        <MenuItem
+          icon="help-circle-outline"
+          title="Questões frequentes"
+          onPress={() => router.push("/(restaurante)/settings/faq")}
+        />
+      </View>
+    </ImageBackground>
   );
 }
 
@@ -55,8 +71,21 @@ function MenuItem({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFF", padding: 16 },
-  subtitle: { color: "#6B7280", marginBottom: 12 },
+  /** Fundo */
+  bg: { flex: 1 },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.08)", // opcional: 8% para legibilidade
+  },
+
+  /** Conteúdo */
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: "transparent", // não tapar o fundo
+  },
+
+  /** UI dos itens */
   item: {
     borderWidth: 1,
     borderColor: "#E5E7EB",
@@ -64,10 +93,17 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 12,
     marginBottom: 10,
-    backgroundColor: "#FFF",
+    backgroundColor: "rgba(255,255,255,0.86)", // cartão translúcido sobre o fundo
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+
+    // Sombra leve
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   row: { flexDirection: "row", alignItems: "center", gap: 10 },
   title: { fontWeight: "800", color: "#0F172A", fontSize: 15 },

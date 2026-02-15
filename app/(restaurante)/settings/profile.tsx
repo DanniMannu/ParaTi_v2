@@ -4,14 +4,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import { useEffect, useState } from "react";
 import {
-    Alert,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 type CuisineType =
@@ -105,7 +105,7 @@ export default function ProfileScreen() {
       <View style={styles.actionsBar}>
         {!editing ? (
           <TouchableOpacity onPress={startEdit} style={styles.actionBtn}>
-            <MaterialCommunityIcons name="pencil" size={16} color="#0F3EA8" />
+            <MaterialCommunityIcons name="pencil" size={13} color="#0F3EA8" />
             <Text style={styles.actionBtnText}>Editar</Text>
           </TouchableOpacity>
         ) : (

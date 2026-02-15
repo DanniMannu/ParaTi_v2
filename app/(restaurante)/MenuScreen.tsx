@@ -62,7 +62,9 @@ export default function MenuScreen() {
 
 function MenusPanel() {
   // Ex.: lista de Menus (Almoço, Jantar, Fins‑de‑semana…)
-  const data = [{ id: "m1", name: "Main Menu", hours: "Mon–Fri 10:00–17:00" }];
+  const data = [
+    { id: "m1", name: "Menu Almoço", hours: "Seg–Sext 10:00–17:00" },
+  ];
   return (
     <FlatList
       data={data}
@@ -180,7 +182,12 @@ function Tab({
 
 /* ---- Styles ---- */
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 16, backgroundColor: "#FFF" },
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    backgroundColor: "transparent",
+  },
   tabs: {
     flexDirection: "row",
     paddingHorizontal: 16,
@@ -222,6 +229,7 @@ const styles = StyleSheet.create({
 
   card: {
     marginTop: 16,
+    marginBottom: 400,
     marginHorizontal: 16,
     backgroundColor: "#FFF",
     borderRadius: 12,

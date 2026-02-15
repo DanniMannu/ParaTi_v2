@@ -48,7 +48,7 @@ export default function OrderCard({
 const styles = StyleSheet.create({
   card: {
     padding: 16,
-    backgroundColor: "#FFF",
+    backgroundColor: "rgb(197, 217, 212)",
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: "#2563EB",
+    backgroundColor: "#adf4f1",
   },
   helpBtnText: { color: "#FFF", fontWeight: "800", fontSize: 12 },
 
