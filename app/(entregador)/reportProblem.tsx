@@ -1,10 +1,12 @@
+import * as Clipboard from "expo-clipboard";
 import * as ImagePicker from "expo-image-picker";
+import { useLocalSearchParams } from "expo-router";
+import * as Sharing from "expo-sharing";
 import React, { useMemo, useState } from "react";
 import {
   Alert,
   Image,
   Linking,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,10 +15,14 @@ import {
   View,
 } from "react-native";
 
-/**
- * Altera para o teu e-mail de suporte
- */
-const SUPPORT_EMAIL = "dmcaa@iscte-iul.pt";
+/** 🔢 Define aqui o número do WhatsApp do suporte (inclui indicativo, ex.: +258...) */
+const WHATSAPP_NUMBER = "+351932297705";
+
+/** 🔐 Substituir futuramente por Supabase Auth (id real do entregador) */
+function getDelivererId(): string {
+  // TODO: Integrar com Supabase (ex.: supabase.auth.getUser())
+  return "entregador_mock_001";
+}
 
 type ReasonId =
   | "restaurante-fechado"
@@ -40,7 +46,27 @@ const REASONS: Reason[] = [
   { id: "outro", emoji: "⚠️", label: "Outro" },
 ];
 
+function normalizePhoneForWa(num: string) {
+  // wa.me requer somente dígitos (com indicativo do país)
+  return (num || "").replace(/[^\d]/g, "");
+}
+
+/** Tipos de params aceites via navegação */
+type OrderRouteParams = {
+  orderId?: string;
+  restauranteId?: string;
+  clienteId?: string;
+  status?: string; // "aceite" | "recolhido" | ...
+};
+
 export default function ReportProblem() {
+  // Lê params (opcionais) passados quando este ecrã é aberto
+  const { orderId, restauranteId, clienteId, status } =
+    useLocalSearchParams<OrderRouteParams>();
+
+  const isEmCurso =
+    !!orderId && (status === "aceite" || status === "recolhido");
+
   // Step: 'select' | 'details'
   const [step, setStep] = useState<"select" | "details">("select");
   const [selected, setSelected] = useState<ReasonId | null>(null);
@@ -56,10 +82,9 @@ export default function ReportProblem() {
   // Selecionar imagem (opcional)
   const pickImage = async () => {
     try {
-      // Pedido de permissão
-      const { status } =
+      const { status: perm } =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
+      if (perm !== "granted") {
         Alert.alert(
           "Permissão necessária",
           "Autoriza o acesso às imagens para anexar uma foto.",
@@ -67,7 +92,6 @@ export default function ReportProblem() {
         return;
       }
 
-      // Nota: MediaTypeOptions é suportado e evita erros (pode mostrar aviso de deprecated em SDKs mais recentes)
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: false,
@@ -101,6 +125,63 @@ export default function ReportProblem() {
     }
   };
 
+  const buildMessage = (reasonLabel: string) => {
+    const idEntregador = getDelivererId();
+
+    if (isEmCurso) {
+      // Com pedido em curso (aceite/recolhido)
+      return (
+        `*Reporte de problema*\n` +
+        `id_entregador: ${idEntregador}\n` +
+        `id_restaurante: ${restauranteId ?? "-"}\n` +
+        `id_cliente: ${clienteId ?? "-"}\n` +
+        `Motivo: ${reasonLabel}.\n` +
+        `\nDetalhes: ${details}`
+      );
+    }
+
+    // Sem pedido em curso
+    return (
+      `*Reporte de problema*\n` +
+      `id_entregador: ${idEntregador}\n` +
+      `Motivo: ${reasonLabel}.\n` +
+      `Detalhes: ${details}`
+    );
+  };
+
+  const openWhatsAppWithText = async (text: string) => {
+    const encoded = encodeURIComponent(text);
+    const appUrl = `whatsapp://send?phone=${encodeURIComponent(
+      WHATSAPP_NUMBER,
+    )}&text=${encoded}`;
+    const webUrl = `https://wa.me/${normalizePhoneForWa(
+      WHATSAPP_NUMBER,
+    )}?text=${encoded}`;
+
+    const canOpenApp = await Linking.canOpenURL("whatsapp://send");
+    await Linking.openURL(canOpenApp ? appUrl : webUrl);
+  };
+
+  const shareImageToWhatsApp = async (uri: string) => {
+    // Abre a folha de partilha para o utilizador escolher o WhatsApp e anexar a imagem.
+    const available = await Sharing.isAvailableAsync();
+    if (!available) {
+      Alert.alert(
+        "Partilha indisponível",
+        "Não foi possível abrir a partilha do sistema para anexar a foto.",
+      );
+      return;
+    }
+    try {
+      await Sharing.shareAsync(uri, {
+        mimeType: "image/jpeg",
+        dialogTitle: "Enviar foto para o WhatsApp",
+      });
+    } catch (e) {
+      console.warn("Falha ao partilhar imagem:", e);
+    }
+  };
+
   const handleSend = async () => {
     if (!selected) {
       Alert.alert("Seleciona uma opção", "Escolhe o tipo de problema.");
@@ -112,35 +193,28 @@ export default function ReportProblem() {
     }
 
     const reasonLabel = REASONS.find((r) => r.id === selected)?.label ?? "—";
-    const subject = `Problema: ${reasonLabel}`;
-
-    const body =
-      `Motivo: ${reasonLabel}\n` +
-      `Plataforma: ${Platform.OS}\n` +
-      (imageUri ? `Foto (URI local): ${imageUri}\n` : "") +
-      `\nDetalhes:\n${details}`;
-
-    const mailto =
-      `mailto:${SUPPORT_EMAIL}` +
-      `?subject=${encodeURIComponent(subject)}` +
-      `&body=${encodeURIComponent(body)}`;
+    const body = buildMessage(reasonLabel);
 
     try {
-      const can = await Linking.canOpenURL(mailto);
-      if (can) {
-        await Linking.openURL(mailto);
-        Alert.alert(
-          "Obrigado",
-          "Abrimos o teu cliente de e‑mail com o reporte preparado.",
-        );
-      } else {
-        Alert.alert(
-          "Aviso",
-          "Não foi possível abrir o cliente de e‑mail. Copia o texto e envia manualmente para " +
-            SUPPORT_EMAIL,
-        );
+      // Copiamos também para a área de transferência como “fallback” (útil se o utilizador quiser reenviar)
+      await Clipboard.setStringAsync(body);
+
+      // 1) Abre o WhatsApp já com o texto formatado
+      await openWhatsAppWithText(body);
+
+      // 2) Se houver foto, partilha-a (o utilizador escolhe WhatsApp e a conversa).
+      if (imageUri) {
+        await shareImageToWhatsApp(imageUri);
       }
-    } catch {
+
+      Alert.alert(
+        "Pronto",
+        imageUri
+          ? "Abrimos o WhatsApp com o texto + a folha de partilha para anexar a foto."
+          : "Abrimos o WhatsApp com o reporte preparado.",
+      );
+    } catch (e) {
+      console.error(e);
       Alert.alert(
         "Erro",
         "Ocorreu um erro ao iniciar o envio. Tenta novamente.",
@@ -158,7 +232,7 @@ export default function ReportProblem() {
         <>
           <Text style={styles.title}>Qual é o problema?</Text>
 
-          {/* Grid de cards grandes (full-width empilhados para simplicidade e legibilidade) */}
+          {/* Grid de cards grandes */}
           <View style={{ marginTop: 8 }}>
             {REASONS.map((r) => {
               const active = selected === r.id;
@@ -183,7 +257,7 @@ export default function ReportProblem() {
             })}
           </View>
 
-          {/* Botão Continuar (em baixo do conteúdo) */}
+          {/* Botão Continuar */}
           <Pressable
             onPress={handleContinue}
             disabled={!canContinue}

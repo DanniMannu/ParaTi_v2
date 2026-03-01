@@ -30,7 +30,7 @@ export default function Help() {
       {/* Texto explicativo (sem chat ao vivo no MVP) */}
       <View style={styles.infoBox}>
         <Text style={styles.infoText}>
-          Responderemos ao teu reporte por e‑mail o mais rapidamente possível.
+          Responderemos ao teu reporte o mais rapidamente possível.
         </Text>
       </View>
 

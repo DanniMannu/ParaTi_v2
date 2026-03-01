@@ -1,4 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from "expo-location";
+import { router } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
@@ -10,8 +12,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import * as Location from "expo-location";
-import { router } from "expo-router";
 
 /** ------------------ TIPOS ------------------ */
 
@@ -28,6 +28,11 @@ type OrderBase = {
   id: string;
   createdAt: number;
   codigoConfirmacao: string;
+
+  /** ⬇️ Adicionados para o reporte */
+  restauranteId: string;
+  clienteId: string;
+
   restauranteNome: string;
   restauranteEndereco: string;
   restauranteCoords: { lat: number; lng: number };
@@ -59,10 +64,18 @@ async function appendHistory(entry: HistoryEntry) {
 /** ------------------ MOCK LISBOA ------------------ */
 
 function createMockOrder(): OrderBase {
+  const now = Date.now();
+  const rnd = Math.floor(Math.random() * 100000);
+
   return {
-    id: "ord_" + Date.now(),
-    createdAt: Date.now(),
+    id: "ord_" + now,
+    createdAt: now,
     codigoConfirmacao: "123456", // código estático
+
+    // ⬇️ IDs mockados (no futuro virão do Supabase)
+    restauranteId: "rest_" + rnd,
+    clienteId: "cli_" + rnd,
+
     restauranteNome: "Time Out Market",
     restauranteEndereco: "Av. 24 de Julho, Lisboa",
     restauranteCoords: { lat: 38.7078, lng: -9.1466 },
@@ -83,8 +96,10 @@ export default function PedidoRecebido() {
   const [status, setStatus] = useState<OrderStatus>("pendente");
   const [seconds, setSeconds] = useState(30);
   const [running, setRunning] = useState(true);
-  const [currentLocation, setCurrentLocation] =
-    useState<{ lat: number; lng: number } | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [codigoInput, setCodigoInput] = useState("");
@@ -94,8 +109,7 @@ export default function PedidoRecebido() {
   /** ---------- Localização ---------- */
   useEffect(() => {
     (async () => {
-      const { status } =
-        await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
 
       if (status !== "granted") {
         setCurrentLocation({ lat: 38.7223, lng: -9.1393 });
@@ -149,7 +163,7 @@ export default function PedidoRecebido() {
 
   const tempoRestante = useMemo(
     () => `${Math.max(0, seconds)} segundos`,
-    [seconds]
+    [seconds],
   );
 
   /** ---------- NOVO PEDIDO ---------- */
@@ -175,8 +189,7 @@ export default function PedidoRecebido() {
     Linking.openURL(url);
   };
 
-  if (!pedido)
-    return <View style={{ flex: 1, backgroundColor: "#F7FAFF" }} />;
+  if (!pedido) return <View style={{ flex: 1, backgroundColor: "#F7FAFF" }} />;
 
   /** ---------- AÇÕES ---------- */
 
@@ -214,7 +227,10 @@ export default function PedidoRecebido() {
     setModalVisible(false);
     setCodigoInput("");
 
-    Alert.alert("Entrega concluída 🎉", "Verifica se tens novo pedido disponível.");
+    Alert.alert(
+      "Entrega concluída 🎉",
+      "Verifica se tens novo pedido disponível.",
+    );
     simulateNewOrder();
   };
 
@@ -224,20 +240,16 @@ export default function PedidoRecebido() {
     <View style={styles.screen}>
       <View style={styles.card}>
         <Text style={styles.restaurant}>{pedido.restauranteNome}</Text>
-        <Text style={styles.subtleText}>
-          {pedido.restauranteEndereco}
-        </Text>
+        <Text style={styles.subtleText}>{pedido.restauranteEndereco}</Text>
 
         <View style={styles.gainBox}>
           <Text style={styles.gainLabel}>Ganharás</Text>
-          <Text style={styles.gainValue}>
-            {pedido.ganhoMtn} MT
-          </Text>
+          <Text style={styles.gainValue}>{pedido.ganhoMtn} MT</Text>
         </View>
 
         <Text style={styles.metaInfo}>
-          {pedido.distanciaKm.toFixed(1)} km • ~
-          {pedido.tempoEstimadoMin} min • {pedido.pagamento}
+          {pedido.distanciaKm.toFixed(1)} km • ~{pedido.tempoEstimadoMin} min •{" "}
+          {pedido.pagamento}
         </Text>
 
         {status === "pendente" && (
@@ -260,13 +272,8 @@ export default function PedidoRecebido() {
 
             <Text style={styles.timer}>⏳ {tempoRestante}</Text>
 
-            <Pressable
-              onPress={simulateNewOrder}
-              style={styles.devBtn}
-            >
-              <Text style={styles.devBtnText}>
-                Simular novo pedido
-              </Text>
+            <Pressable onPress={simulateNewOrder} style={styles.devBtn}>
+              <Text style={styles.devBtnText}>Simular novo pedido</Text>
             </Pressable>
           </>
         )}
@@ -278,26 +285,29 @@ export default function PedidoRecebido() {
               onPress={() =>
                 openRoute(
                   pedido.restauranteCoords.lat,
-                  pedido.restauranteCoords.lng
+                  pedido.restauranteCoords.lng,
                 )
               }
             >
-              <Text style={styles.mapBtnText}>
-                Ir para restaurante
-              </Text>
+              <Text style={styles.mapBtnText}>Ir para restaurante</Text>
+            </Pressable>
+
+            <Pressable style={styles.secondaryBtn} onPress={handlePickedUp}>
+              <Text style={styles.secondaryBtnText}>Marcar como recolhido</Text>
             </Pressable>
 
             <Pressable
-              style={styles.secondaryBtn}
-              onPress={handlePickedUp}
-            >
-              <Text style={styles.secondaryBtnText}>
-                Marcar como recolhido
-              </Text>
-            </Pressable>
-
-            <Pressable
-              onPress={() => router.push({ pathname: "/(entregador)/reportProblem" })}
+              onPress={() =>
+                router.push({
+                  pathname: "/(entregador)/reportProblem",
+                  params: {
+                    orderId: pedido.id,
+                    restauranteId: pedido.restauranteId,
+                    clienteId: pedido.clienteId,
+                    status: "aceite",
+                  },
+                })
+              }
               style={styles.reportBtn}
             >
               <Text style={styles.reportBtnText}>Preciso de ajuda</Text>
@@ -310,28 +320,31 @@ export default function PedidoRecebido() {
             <Pressable
               style={styles.mapBtn}
               onPress={() =>
-                openRoute(
-                  pedido.clienteCoords.lat,
-                  pedido.clienteCoords.lng
-                )
+                openRoute(pedido.clienteCoords.lat, pedido.clienteCoords.lng)
               }
             >
-              <Text style={styles.mapBtnText}>
-                Ir para cliente
-              </Text>
+              <Text style={styles.mapBtnText}>Ir para cliente</Text>
             </Pressable>
 
             <Pressable
               style={styles.deliverBtn}
               onPress={() => setModalVisible(true)}
             >
-              <Text style={styles.deliverBtnText}>
-                Marcar como entregue
-              </Text>
+              <Text style={styles.deliverBtnText}>Marcar como entregue</Text>
             </Pressable>
 
             <Pressable
-              onPress={() => router.push({ pathname: "/(entregador)/reportProblem" })}
+              onPress={() =>
+                router.push({
+                  pathname: "/(entregador)/reportProblem",
+                  params: {
+                    orderId: pedido.id,
+                    restauranteId: pedido.restauranteId,
+                    clienteId: pedido.clienteId,
+                    status: "recolhido",
+                  },
+                })
+              }
               style={styles.reportBtn}
             >
               <Text style={styles.reportBtnText}>Preciso de ajuda</Text>
