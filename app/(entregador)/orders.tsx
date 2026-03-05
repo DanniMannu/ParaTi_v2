@@ -1,7 +1,14 @@
+// app/(entregador)/orders.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import { router } from "expo-router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Alert,
   Linking,
@@ -14,7 +21,6 @@ import {
 } from "react-native";
 
 /** ------------------ TIPOS ------------------ */
-
 type PaymentType = "Dinheiro" | "E-MOLA/M-PESA";
 type OrderStatus =
   | "pendente"
@@ -22,7 +28,8 @@ type OrderStatus =
   | "recolhido"
   | "entregue"
   | "recusado"
-  | "expirado";
+  | "expirado"
+  | "cancelado"; //Caso tenha sido aceite mas depois cancelado pelo restaurante, cliente ou entregador (ex.: por motivo de força maior)
 
 type OrderBase = {
   id: string;
@@ -53,7 +60,6 @@ type HistoryEntry = OrderBase & {
 const STORAGE_HISTORY_KEY = "courier.history.v1";
 
 /** ------------------ STORAGE ------------------ */
-
 async function appendHistory(entry: HistoryEntry) {
   const raw = await AsyncStorage.getItem(STORAGE_HISTORY_KEY);
   const arr: HistoryEntry[] = raw ? JSON.parse(raw) : [];
@@ -62,11 +68,9 @@ async function appendHistory(entry: HistoryEntry) {
 }
 
 /** ------------------ MOCK LISBOA ------------------ */
-
 function createMockOrder(): OrderBase {
   const now = Date.now();
   const rnd = Math.floor(Math.random() * 100000);
-
   return {
     id: "ord_" + now,
     createdAt: now,
@@ -89,9 +93,8 @@ function createMockOrder(): OrderBase {
   };
 }
 
-/** ------------------ COMPONENTE ------------------ */
-
-export default function PedidoRecebido() {
+/** ------------------ COMPONENTE REUTILIZÁVEL ------------------ */
+export function PedidosAtivos() {
   const [pedido, setPedido] = useState<OrderBase | null>(null);
   const [status, setStatus] = useState<OrderStatus>("pendente");
   const [seconds, setSeconds] = useState(30);
@@ -106,16 +109,28 @@ export default function PedidoRecebido() {
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const stopTimer = () => {
+    setRunning(false);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  };
+
+  /** ---------- NOVO PEDIDO ---------- */
+  const simulateNewOrder = useCallback(() => {
+    stopTimer();
+    setPedido(createMockOrder());
+    setStatus("pendente");
+    setSeconds(30);
+    setRunning(true);
+  }, []);
+
   /** ---------- Localização ---------- */
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
-
       if (status !== "granted") {
         setCurrentLocation({ lat: 38.7223, lng: -9.1393 });
         return;
       }
-
       const loc = await Location.getCurrentPositionAsync({});
       setCurrentLocation({
         lat: loc.coords.latitude,
@@ -124,10 +139,9 @@ export default function PedidoRecebido() {
     })();
 
     simulateNewOrder();
-  }, []);
+  }, [simulateNewOrder]);
 
   /** ---------- TIMER ---------- */
-
   useEffect(() => {
     if (!running || status !== "pendente") return;
 
@@ -154,30 +168,14 @@ export default function PedidoRecebido() {
         simulateNewOrder();
       });
     }
-  }, [seconds]);
-
-  const stopTimer = () => {
-    setRunning(false);
-    if (intervalRef.current) clearInterval(intervalRef.current);
-  };
+  }, [seconds, pedido, status, simulateNewOrder]);
 
   const tempoRestante = useMemo(
     () => `${Math.max(0, seconds)} segundos`,
     [seconds],
   );
 
-  /** ---------- NOVO PEDIDO ---------- */
-
-  const simulateNewOrder = () => {
-    stopTimer();
-    setPedido(createMockOrder());
-    setStatus("pendente");
-    setSeconds(30);
-    setRunning(true);
-  };
-
   /** ---------- MAPA ---------- */
-
   const openRoute = (destLat: number, destLng: number) => {
     if (!currentLocation) {
       Alert.alert("Erro", "Localização não disponível.");
@@ -192,7 +190,6 @@ export default function PedidoRecebido() {
   if (!pedido) return <View style={{ flex: 1, backgroundColor: "#F7FAFF" }} />;
 
   /** ---------- AÇÕES ---------- */
-
   const handleAccept = () => {
     stopTimer();
     setStatus("aceite");
@@ -235,12 +232,19 @@ export default function PedidoRecebido() {
   };
 
   /** ---------- UI ---------- */
-
   return (
     <View style={styles.screen}>
       <View style={styles.card}>
         <Text style={styles.restaurant}>{pedido.restauranteNome}</Text>
-        <Text style={styles.subtleText}>{pedido.restauranteEndereco}</Text>
+        <Text style={styles.subtleText}>
+          Endereço do restaurante: {pedido.restauranteEndereco}
+        </Text>
+        <Text style={styles.subtleText}>
+          Nome do cliente: {pedido.clienteNome}
+        </Text>
+        <Text style={styles.subtleText}>
+          Endereço do cliente: {pedido.clienteEndereco}
+        </Text>
 
         <View style={styles.gainBox}>
           <Text style={styles.gainLabel}>Ganharás</Text>
@@ -383,8 +387,10 @@ export default function PedidoRecebido() {
   );
 }
 
-/** ------------------ ESTILOS ------------------ */
+/** Export default para compatibilidade com rotas existentes, se precisares */
+export default PedidosAtivos;
 
+/** ------------------ ESTILOS ------------------ */
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#F7FAFF", padding: 20 },
   card: { backgroundColor: "#FFF", borderRadius: 16, padding: 16 },

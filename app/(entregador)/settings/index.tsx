@@ -5,7 +5,7 @@ export default function SettingsHome() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
       <SettingItem
-        label="Conta & Perfil"
+        label="Informações pessoais"
         onPress={() => router.push("/(entregador)/profile")}
       />
 
@@ -20,7 +20,7 @@ export default function SettingsHome() {
       />
 
       <SettingItem
-        label="Segurança & Conta"
+        label="Segurança"
         onPress={() => router.push("/(entregador)/settings/security")}
       />
     </ScrollView>

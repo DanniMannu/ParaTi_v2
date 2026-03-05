@@ -1,15 +1,22 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 export default function Payments() {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
         <Info label="Forma de pagamento atual" value="M‑Pesa" />
-        <Info label="Dia de pagamento" value="Semanal" />
+        <Info
+          label="Frequência de pagamento"
+          value="Semanal * Todas Segundas-Feiras"
+        />
 
-        <Pressable style={styles.btn}>
-          <Text style={styles.btnText}>Atualizar dados de pagamento</Text>
-        </Pressable>
+        <View style={styles.infoBox}>
+          <Text style={styles.infoText}>
+            Para alterar a forma de pagamento ou a frequência, por favor,
+            contacta o suporte através da secção de ajuda. Estamos aqui para
+            ajudar!
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -43,4 +50,20 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   btnText: { color: "#FFF", fontWeight: "800", textAlign: "center" },
+  infoBox: {
+    backgroundColor: "#EFF6FF",
+    borderColor: "#DBEAFE",
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  infoText: { color: "#1E3A8A" },
+
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1F2937",
+    marginBottom: 8,
+  },
 });

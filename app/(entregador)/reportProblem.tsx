@@ -1,11 +1,8 @@
 import * as Clipboard from "expo-clipboard";
-import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams } from "expo-router";
-import * as Sharing from "expo-sharing";
 import React, { useMemo, useState } from "react";
 import {
   Alert,
-  Image,
   Linking,
   Pressable,
   ScrollView,
@@ -73,39 +70,9 @@ export default function ReportProblem() {
 
   // Detalhes
   const [details, setDetails] = useState("");
-  const [imageUri, setImageUri] = useState<string | null>(null);
-
   // Botões desativados?
   const canContinue = useMemo(() => !!selected, [selected]);
   const canSend = useMemo(() => details.trim().length >= 1, [details]);
-
-  // Selecionar imagem (opcional)
-  const pickImage = async () => {
-    try {
-      const { status: perm } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (perm !== "granted") {
-        Alert.alert(
-          "Permissão necessária",
-          "Autoriza o acesso às imagens para anexar uma foto.",
-        );
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: false,
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setImageUri(result.assets[0].uri);
-      }
-    } catch (e) {
-      console.error(e);
-      Alert.alert("Erro", "Não foi possível abrir a galeria.");
-    }
-  };
 
   const handleContinue = () => {
     if (!selected) {
@@ -135,8 +102,10 @@ export default function ReportProblem() {
         `id_entregador: ${idEntregador}\n` +
         `id_restaurante: ${restauranteId ?? "-"}\n` +
         `id_cliente: ${clienteId ?? "-"}\n` +
+        `\n` +
         `Motivo: ${reasonLabel}.\n` +
-        `\nDetalhes: ${details}`
+        `\n` +
+        `Detalhes: ${details}`
       );
     }
 
@@ -144,7 +113,9 @@ export default function ReportProblem() {
     return (
       `*Reporte de problema*\n` +
       `id_entregador: ${idEntregador}\n` +
+      `\n` +
       `Motivo: ${reasonLabel}.\n` +
+      `\n` +
       `Detalhes: ${details}`
     );
   };
@@ -160,26 +131,6 @@ export default function ReportProblem() {
 
     const canOpenApp = await Linking.canOpenURL("whatsapp://send");
     await Linking.openURL(canOpenApp ? appUrl : webUrl);
-  };
-
-  const shareImageToWhatsApp = async (uri: string) => {
-    // Abre a folha de partilha para o utilizador escolher o WhatsApp e anexar a imagem.
-    const available = await Sharing.isAvailableAsync();
-    if (!available) {
-      Alert.alert(
-        "Partilha indisponível",
-        "Não foi possível abrir a partilha do sistema para anexar a foto.",
-      );
-      return;
-    }
-    try {
-      await Sharing.shareAsync(uri, {
-        mimeType: "image/jpeg",
-        dialogTitle: "Enviar foto para o WhatsApp",
-      });
-    } catch (e) {
-      console.warn("Falha ao partilhar imagem:", e);
-    }
   };
 
   const handleSend = async () => {
@@ -202,17 +153,7 @@ export default function ReportProblem() {
       // 1) Abre o WhatsApp já com o texto formatado
       await openWhatsAppWithText(body);
 
-      // 2) Se houver foto, partilha-a (o utilizador escolhe WhatsApp e a conversa).
-      if (imageUri) {
-        await shareImageToWhatsApp(imageUri);
-      }
-
-      Alert.alert(
-        "Pronto",
-        imageUri
-          ? "Abrimos o WhatsApp com o texto + a folha de partilha para anexar a foto."
-          : "Abrimos o WhatsApp com o reporte preparado.",
-      );
+      Alert.alert("Pronto", "Abrimos o WhatsApp com o reporte preparado.");
     } catch (e) {
       console.error(e);
       Alert.alert(
@@ -286,28 +227,6 @@ export default function ReportProblem() {
             numberOfLines={3}
             textAlignVertical="top"
           />
-
-          {/* Foto opcional */}
-          {imageUri ? (
-            <View style={styles.previewRow}>
-              <Image source={{ uri: imageUri }} style={styles.preview} />
-              <Pressable
-                onPress={() => setImageUri(null)}
-                style={styles.secondaryBtn}
-              >
-                <Text style={styles.secondaryBtnText}>Remover foto</Text>
-              </Pressable>
-            </View>
-          ) : (
-            <Pressable
-              onPress={pickImage}
-              style={[styles.secondaryBtn, { alignSelf: "flex-start" }]}
-            >
-              <Text style={styles.secondaryBtnText}>
-                📷 Adicionar foto (opcional)
-              </Text>
-            </Pressable>
-          )}
 
           {/* Ações: Voltar / Enviar */}
           <View style={styles.actionsRow}>

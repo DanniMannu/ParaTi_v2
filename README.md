@@ -6,9 +6,22 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
 1. Install dependencies
 
-   ```bash
-   npm install
-   ```
+npx create-expo-app drawer-app
+npx expo install @react-navigation/native
+npx expo install react-native-screens react-native-safe-area-context
+npx expo install @react-navigation/drawer
+npx expo install react-native-gesture-handler react-native-reanimated
+npx expo install @react-native-async-storage/async-storage
+npx expo install @react-native-community/datetimepicker
+npx expo install expo-document-picker
+npx expo install expo-image-picker
+npx expo install react-native-maps
+npx expo install expo-location
+npm install react-native-maps-directions
+npx expo install expo-maps expo-maps-routes
+npx expo install expo-maps expo-maps-routes expo-location
+npx expo install expo-image-picker expo-clipboard expo-sharing
+expo install expo-image-picker expo-clipboard expo-sharing
 
 2. Start the app
 

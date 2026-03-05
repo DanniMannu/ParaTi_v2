@@ -1,24 +1,15 @@
 // app/(entregador)/index.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Link, usePathname } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import SummaryCard from "../../src/components/SummaryCard";
+import { PedidosAtivos } from "./orders"; // ⬅️ importa o componente reutilizável
 
 // Opcional: podes ler o nome do utilizador de um contexto ou prop
 const USER_FIRST_NAME = "Daniela"; // substituir quando tiveres auth/perfil
 const STORAGE_KEY = "courier.availability"; // guarda online/offline
 
 export default function EntregadorHome() {
-  // (Mantemos o state caso queiras mais tabs locais no futuro)
-  const pathname = usePathname();
-
   // --- MOCK dos teus números de hoje (mantidos) ---
   const salesToday = 900.0;
   const ordersToday = 6;
@@ -56,10 +47,12 @@ export default function EntregadorHome() {
         : "Estas Offline — não irás receber pedidos",
     [isOnline],
   );
+
   const statusDotStyle = useMemo(
     () => (isOnline ? styles.dotOnline : styles.dotOffline),
     [isOnline],
   );
+
   const statusChipStyle = useMemo(
     () => (isOnline ? styles.chipOnline : styles.chipOffline),
     [isOnline],
@@ -70,8 +63,11 @@ export default function EntregadorHome() {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Saudação */}
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 28 }}
+    >
+      {/* Saudaçāo */}
       <Text style={styles.greet}>Olá, {USER_FIRST_NAME}</Text>
 
       {/* Título */}
@@ -107,43 +103,13 @@ export default function EntregadorHome() {
         <SummaryCard label="Total de pedidos realizados" value={ordersToday} />
       </View>
 
-      {/* Tabs */}
-      <View style={[styles.tabs, { marginTop: 26 }]}>
-        {/* Navega explicitamente para /(entregador)/orders */}
-        <Link href="/(entregador)/orders" asChild>
-          <TabButton
-            label="os teus Pedidos Ativos"
-            // Considera 'active' quando a rota corrente for a de orders
-            active={pathname === "/(entregador)/orders"}
-          />
-        </Link>
-      </View>
-    </View>
-  );
-}
-
-/** ---- COMPONENTES AUXILIARES ---- */
-
-function TabButton({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress?: () => void; // opcional quando usamos Link asChild
-}) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={styles.tabBtn}
-      activeOpacity={0.18}
-    >
-      <Text style={[styles.tabText, active && styles.tabTextActive]}>
-        {label}
+      {/* --- Secção nova: Pedidos a decorrer (embed do orders) --- */}
+      <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
+        Pedidos a decorrer
       </Text>
-      {active && <View style={styles.activeLine} />}
-    </TouchableOpacity>
+      <PedidosAtivos />
+      {/* -------------------------------------------------------- */}
+    </ScrollView>
   );
 }
 
@@ -176,6 +142,11 @@ const styles = StyleSheet.create({
     color: "#111827",
     marginBottom: 16,
   },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#111827",
+  },
 
   // --- Top controls (toggle + chip) ---
   topRow: {
@@ -184,8 +155,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     gap: 12,
   },
-
-  // --- Botão Online/Offline (compacto, tipo switch largo) ---
   availabilityBtn: {
     flexDirection: "row",
     alignItems: "center",
