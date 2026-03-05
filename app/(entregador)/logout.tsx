@@ -1,82 +1,163 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import React from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 export default function Logout() {
-  const handleConfirm = async () => {
-    try {
-      // Limpa valores que quiseres (opcional)
-      await AsyncStorage.removeItem("courier.availability");
-      // await AsyncStorage.removeItem("courier.profile.v1");
+  const [visible, setVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-      // Volta ao início (ou login)
+  const handleLogout = async () => {
+    try {
+      setLoading(true);
+
+      await AsyncStorage.multiRemove([
+        "courier.availability",
+        "courier.profile.v1",
+      ]);
+
+      // Futuro
+      // await supabase.auth.signOut()
+
       router.replace("/");
-    } catch (e) {
-      console.error(e);
-      Alert.alert("Erro", "Não foi possível terminar a sessão.");
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+      setVisible(false);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Terminar Sessão</Text>
-
-      <Text style={styles.warning}>
-        Tens a certeza que queres terminar a sessão?
-      </Text>
-
-      <View style={{ height: 24 }} />
-
-      <Pressable style={styles.confirmBtn} onPress={handleConfirm}>
-        <Text style={styles.confirmTxt}>Confirmar</Text>
+      <Pressable style={styles.logoutBtn} onPress={() => setVisible(true)}>
+        <Text style={styles.logoutTxt}>Terminar Sessão</Text>
       </Pressable>
 
-      <Pressable style={[styles.cancelBtn]} onPress={() => router.back()}>
-        <Text style={styles.cancelTxt}>Cancelar</Text>
-      </Pressable>
+      <Modal visible={visible} transparent animationType="fade">
+        <View style={styles.overlay}>
+          <View style={styles.modal}>
+            <Text style={styles.icon}>⚠️</Text>
+
+            <Text style={styles.title}>Terminar sessão</Text>
+
+            <Text style={styles.description}>
+              Tens a certeza que queres sair da tua conta?
+            </Text>
+
+            <View style={styles.buttons}>
+              <Pressable
+                style={styles.cancelBtn}
+                onPress={() => setVisible(false)}
+                disabled={loading}
+              >
+                <Text style={styles.cancelTxt}>Cancelar</Text>
+              </Pressable>
+
+              <Pressable
+                style={styles.confirmBtn}
+                onPress={handleLogout}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.confirmTxt}>Sair</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#F7FAFF",
     padding: 20,
-    justifyContent: "center",
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#111827",
-    textAlign: "center",
-    marginBottom: 12,
-  },
-  warning: {
-    fontSize: 16,
-    color: "#6B7280",
-    textAlign: "center",
-  },
-  confirmBtn: {
+
+  logoutBtn: {
     backgroundColor: "#EF4444",
     paddingVertical: 14,
     borderRadius: 12,
-    marginBottom: 12,
   },
-  confirmTxt: {
+
+  logoutTxt: {
+    color: "#fff",
     textAlign: "center",
-    color: "#FFF",
+    fontWeight: "700",
+    fontSize: 16,
+  },
+
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  modal: {
+    width: "85%",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 24,
+    alignItems: "center",
+  },
+
+  icon: {
+    fontSize: 40,
+    marginBottom: 10,
+  },
+
+  title: {
+    fontSize: 20,
     fontWeight: "800",
-  },
-  cancelBtn: {
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: "#E5E7EB",
-  },
-  cancelTxt: {
-    textAlign: "center",
+    marginBottom: 6,
     color: "#111827",
-    fontWeight: "800",
+  },
+
+  description: {
+    fontSize: 14,
+    color: "#6B7280",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+
+  buttons: {
+    flexDirection: "row",
+    gap: 10,
+  },
+
+  cancelBtn: {
+    backgroundColor: "#E5E7EB",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+
+  cancelTxt: {
+    fontWeight: "600",
+    color: "#111827",
+  },
+
+  confirmBtn: {
+    backgroundColor: "#EF4444",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+
+  confirmTxt: {
+    color: "#fff",
+    fontWeight: "700",
   },
 });

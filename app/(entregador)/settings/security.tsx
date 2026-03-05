@@ -234,7 +234,7 @@ function DeleteAccountModal({
     setConfirming(false);
     onClose();
     Alert.alert("Que bom!", "Ficamos felizes por continuares connosco ✨");
-    router.replace("./(entregador)/index");
+    router.replace("/(entregador)/settings");
   };
 
   const handleConfirmYes = async () => {
