@@ -1,9 +1,6 @@
-// app/(cliente)/_layout.tsx
-import { Drawer } from "expo-router/drawer";
-export default function ClienteLayout() {
-  return (
-    <Drawer>
-      <Drawer.Screen name="index" options={{ title: "Home (Cliente)" }} />
-    </Drawer>
-  );
+// app/(client)/_layout.tsx
+import { Stack } from "expo-router";
+
+export default function ClientLayout() {
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

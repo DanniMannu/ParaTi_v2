@@ -25,7 +25,7 @@ const RoleContext = createContext<RoleContextValue>({
 });
 
 export function RoleProvider({ children }: { children: ReactNode }) {
-  const [role, setRoleState] = useState<Role>("entregador"); // default mudar o role.
+  const [role, setRoleState] = useState<Role>("cliente"); // default mudar o role.
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
